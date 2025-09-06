@@ -5,6 +5,7 @@
 //            ./matmul --progress
 //            ./matmul 256 768 1024 5000 10000   (tamaños custom)
 // Nota: --progress puede afectar ligeramente los tiempos medidos.
+// [NUEVO] Ahora también se imprime el tiempo de llenado (A, B y A+B).
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,9 +17,6 @@
 
 /* ===========================
    BLOQUE: Tipo numérico y helpers
-   ---------------------------
-   - real_t = double (precisión y estabilidad). Para reducir memoria a la mitad,
-     compilar con -DUSE_FLOAT y real_t será float.
    =========================== */
 #ifdef USE_FLOAT
 typedef float real_t;
@@ -201,7 +199,7 @@ int main(int argc, char **argv) {
         }
     }
     if (!sizes_from_args) {
-        // Ahora por defecto: 100, 500, 1000, 5000 y 10000
+        // Por defecto: 100, 500, 1000, 5000 y 10000
         sizes[0] = 100; sizes[1] = 500; sizes[2] = 1000; sizes[3] = 5000; sizes[4] = 10000; nsizes = 5;
     }
 
@@ -242,8 +240,18 @@ int main(int argc, char **argv) {
             continue; // pasa al siguiente tamaño
         }
 
+        // --------- [NUEVO] Medición del llenado de A y B ----------
+        double tA0 = wall_time_sec();
         fill_rand(A, n);
+        double tA = wall_time_sec() - tA0;
+
+        double tB0 = wall_time_sec();
         fill_rand(B, n);
+        double tB = wall_time_sec() - tB0;
+
+        printf("Tiempo llenado A   : %.6f s\n", tA);
+        printf("Tiempo llenado B   : %.6f s\n", tB);
+        printf("Tiempo llenado A+B : %.6f s\n", tA + tB);
 
 #if VERIFY
         zero_mat(Cref, n);
